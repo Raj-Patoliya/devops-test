@@ -1,0 +1,46 @@
+pipeline{
+    agent any
+    environment{
+        PATH = '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/opt/local/bin:/opt/local/sbin:/sbin'
+        DOCKERHUB_CREDENTIALS= credentials('cred_dockerhub') 
+    }
+    stages{
+        stage('Docker-Login'){
+            steps{
+                script{
+                  sh 'echo $DOCKERHUB_CREDENTIALS_PSW | com.docker.cli login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                }
+            }
+        }
+        stage('Build'){
+            steps{
+                script{
+                    sh 'com.docker.cli build -t $DOCKERHUB_CREDENTIALS_USR/devops-test .'
+                }
+            }
+        }
+        stage('PUSH'){
+            steps{
+                script{
+                    sh 'com.docker.cli push $DOCKERHUB_CREDENTIALS_USR/devops-test'
+                }
+            }
+        }
+        stage('Deployment'){
+            steps{
+                script{
+                    sh"kubectl apply -f deployments/pod-deployment.yaml --context dev"
+                    sh"kubectl apply -f deployments/pod-deployment.yaml --context minikube"
+                }
+            }
+        }
+        stage('Service'){
+            steps{
+                script{
+                    sh"kubectl apply -f deployments/pod-service.yaml --context minikube"
+                    sh"kubectl apply -f deployments/pod-service.yaml --context dev"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql # The name of the StatefulSet
+spec:
+  serviceName: mysql # The name of the service this StatefulSet should use
+  selector:
+    matchLabels:
+      app: mysql
+  replicas: 1 # Indicates this StatefulSet should only create one instance of the mysql database
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql # The name of the MySQL container
+          image: mysql:latest # The image of the MySQL database
+          imagePullPolicy: "IfNotPresent"
+          ports:
+          - containerPort: 3306 # The port number MySQL listens on
+          envFrom:
+          - configMapRef:
+              name: mysql-config # Indicates this StatfulSet should a config map called mysql-config to access the MySQL database
+          volumeMounts:
+          - name: data
+            mountPath: /var/lib/mysql/ # Data should be mounted onto this file path
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mysql-claim # Indicates the mysql database should use a PVC called mysql-claim

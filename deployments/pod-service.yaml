@@ -4,8 +4,8 @@ metadata:
   name: myservice
 spec:
   selector:
-    name: mydeployments
+    name: deployments
   ports:
     - port: 80
-      targetPort: http
+      targetPort: 80
   type: NodePort
